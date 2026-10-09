@@ -1,7 +1,13 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+let socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
-export const socket = io(SOCKET_URL, {
+// Bulletproof the URL: Strip trailing slashes and ensure it DOES NOT end with /api
+socketUrl = socketUrl.replace(/\/$/, '');
+if (socketUrl.endsWith('/api')) {
+  socketUrl = socketUrl.replace(/\/api$/, '');
+}
+
+export const socket = io(socketUrl, {
   autoConnect: false,
 });

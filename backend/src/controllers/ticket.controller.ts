@@ -23,7 +23,7 @@ export const getTickets = async (req: Request, res: Response, next: NextFunction
 
 export const getTicketById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const ticket = await ticketService.getTicketById(req.params.id);
+    const ticket = await ticketService.getTicketById(req.params.id as string);
     res.status(200).json({ success: true, data: ticket });
   } catch (error) {
     next(error);
@@ -32,7 +32,7 @@ export const getTicketById = async (req: Request, res: Response, next: NextFunct
 
 export const updateTicketStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const ticketId = req.params.id;
+    const ticketId = req.params.id as string;
     const ticket = await ticketService.updateTicketStatus(ticketId, req.body.status);
     
     // Broadcast status updates
@@ -48,7 +48,7 @@ export const updateTicketStatus = async (req: Request, res: Response, next: Next
 
 export const getTicketMessages = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const messages = await ticketService.getTicketMessages(req.params.id);
+    const messages = await ticketService.getTicketMessages(req.params.id as string);
     res.status(200).json({ success: true, data: messages });
   } catch (error) {
     next(error);
@@ -57,7 +57,7 @@ export const getTicketMessages = async (req: Request, res: Response, next: NextF
 
 export const addMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const ticketId = req.params.id;
+    const ticketId = req.params.id as string;
     const { senderType, message } = req.body;
     
     const newMessage = await ticketService.addMessage(ticketId, senderType, message);

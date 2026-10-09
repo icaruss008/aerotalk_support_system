@@ -17,7 +17,7 @@ server.listen(PORT as number, '0.0.0.0', () => {
   // MVP Auto-Migration: Ensure database tables are instantly created on boot
   try {
     console.log('Syncing database schema...');
-    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+    execSync('npx --yes prisma db push --accept-data-loss', { stdio: 'inherit' });
     console.log('Database synced successfully!');
   } catch (err) {
     console.error('Failed to auto-sync database:', err);

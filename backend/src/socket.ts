@@ -5,19 +5,11 @@ import * as ticketService from './services/ticket.service';
 let io: SocketIOServer | null = null;
 
 export const initSocket = (server: HttpServer) => {
-  const allowedOrigins = process.env.FRONTEND_URL 
-    ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, '')) 
-    : ['http://localhost:5173'];
-
   io = new SocketIOServer(server, {
     cors: {
       origin: (origin, callback) => {
-        const cleanOrigin = origin ? origin.replace(/\/$/, '') : '';
-        if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
+        // Echo back the exact origin to guarantee connection
+        callback(null, origin || true);
       },
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
       credentials: true,

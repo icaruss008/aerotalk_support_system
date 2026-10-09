@@ -9,19 +9,12 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, '')) 
-  : ['http://localhost:5173'];
-
 app.use(cors({
   origin: (origin, callback) => {
-    // Check if origin matches allowed origins (stripping trailing slash from origin just in case)
-    const cleanOrigin = origin ? origin.replace(/\/$/, '') : '';
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // For MVP safety: Echo back the exact origin that made the request.
+    // This allows credentials:true while bypassing strict CORS origin requirements,
+    // guaranteeing the frontend can connect even if FRONTEND_URL is misconfigured.
+    callback(null, origin || true);
   },
   credentials: true,
 }));

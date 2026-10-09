@@ -192,7 +192,7 @@ export default function AgentTicketView() {
                   
                   {!isAgent && (
                     <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 shadow-sm font-bold border border-blue-200">
-                      {ticket.customer?.name.charAt(0).toUpperCase() || 'C'}
+                      {ticket.customer?.name ? ticket.customer.name.charAt(0).toUpperCase() : 'C'}
                     </div>
                   )}
                   

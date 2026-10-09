@@ -33,9 +33,10 @@ export default function AgentDashboard() {
   const fetchTickets = async () => {
     try {
       const res = await api.get('/tickets');
-      setTickets(res.data.data);
+      setTickets(Array.isArray(res.data?.data) ? res.data.data : []);
     } catch (err) {
       console.error(err);
+      setTickets([]);
     }
   };
 
@@ -133,27 +134,27 @@ export default function AgentDashboard() {
                 {filteredTickets.map(ticket => (
                   <tr key={ticket.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      <span title={ticket.id}>{ticket.id.slice(0,8)}...</span>
+                      <span title={ticket.id}>{ticket.id ? ticket.id.slice(0,8) : 'Unknown'}...</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{ticket.customer?.name || 'Unknown'}</div>
                       <div className="text-sm text-gray-500">{ticket.customer?.email || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">{ticket.title}</div>
+                      <div className="text-sm text-gray-900 max-w-xs truncate">{ticket.title || 'No Title'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${getPriorityBadge(ticket.priority)}`}>
-                        {ticket.priority}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${getPriorityBadge(ticket.priority || 'MEDIUM')}`}>
+                        {ticket.priority || 'MEDIUM'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${getStatusBadge(ticket.status)}`}>
-                        {ticket.status.replace('_', ' ')}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${getStatusBadge(ticket.status || 'OPEN')}`}>
+                        {(ticket.status || 'OPEN').replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(ticket.updatedAt).toLocaleString()}
+                      {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString() : 'Unknown'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link to={`/agent/tickets/${ticket.id}`} className="text-blue-600 hover:text-blue-900 font-semibold bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition">

@@ -1,0 +1,140 @@
+{
+  "info": {
+    "name": "AeroTalk API",
+    "description": "API endpoints for the AeroTalk real-time ticketing system.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Create or Get Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"<CUSTOMER_UUID>\",\n  \"title\": \"Cannot login to my account\",\n  \"description\": \"I tried resetting my password but the email never arrives.\",\n  \"priority\": \"HIGH\",\n  \"initialMessages\": [\"Hi\", \"I need help logging in\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets"]
+            }
+          }
+        },
+        {
+          "name": "Get All Tickets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets?status=OPEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets"],
+              "query": [
+                { "key": "status", "value": "OPEN", "disabled": true },
+                { "key": "customerId", "value": "<CUSTOMER_UUID>", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Ticket By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/<TICKET_UUID>",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "<TICKET_UUID>"]
+            }
+          }
+        },
+        {
+          "name": "Update Ticket Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/<TICKET_UUID>/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "<TICKET_UUID>", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Ticket Messages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/<TICKET_UUID>/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "<TICKET_UUID>", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senderType\": \"AGENT\",\n  \"message\": \"Hello Jane, I'm looking into this right now.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tickets/<TICKET_UUID>/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tickets", "<TICKET_UUID>", "messages"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}

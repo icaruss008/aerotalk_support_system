@@ -35,9 +35,9 @@ export default function CustomerLayout() {
   };
 
   return (
-    <div className="flex w-full h-full">
+    <div className="flex w-full h-full relative">
       {/* Sidebar */}
-      <div className="w-96 bg-white border-r border-gray-300 flex flex-col h-full shrink-0 shadow-sm z-10">
+      <div className={`w-full md:w-96 bg-white border-r border-gray-300 flex-col h-full shrink-0 shadow-sm z-10 ${id ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-6 border-b border-gray-200 bg-gray-50">
           <Link to="/customer" className="flex items-center gap-2 w-full justify-center bg-blue-600 text-white py-3.5 px-4 rounded-xl hover:bg-blue-700 transition font-bold text-lg shadow-md hover:shadow-lg">
             <MessageSquarePlus size={24} />
@@ -71,7 +71,7 @@ export default function CustomerLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 bg-white h-full flex flex-col overflow-hidden relative">
+      <div className={`flex-1 bg-white h-full flex-col overflow-hidden relative ${id ? 'flex' : 'hidden md:flex'}`}>
         <Outlet context={{ refreshTickets: fetchTickets }} />
       </div>
     </div>

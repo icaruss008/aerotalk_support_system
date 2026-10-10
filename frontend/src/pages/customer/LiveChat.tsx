@@ -75,19 +75,27 @@ export default function LiveChat() {
   return (
     <div className="flex flex-col h-full relative bg-gray-50/30">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-6 flex justify-between items-center shadow-sm z-10 shrink-0">
-        <div>
-          <h2 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
-            {ticket.title} 
-            <span className="text-gray-400 font-medium text-lg">#{ticket.id.slice(0,8)}</span>
-          </h2>
-          <div className="flex items-center gap-3 mt-2">
-            <span className={`text-sm px-3.5 py-1 rounded-full font-black border uppercase tracking-wider ${getStatusColor(ticket.status)}`}>
-              {ticket.status.replace('_', ' ')}
-            </span>
-            <span className="text-sm uppercase font-black text-gray-500 bg-gray-100 border border-gray-200 px-3.5 py-1 rounded-full tracking-wider">
-              {ticket.priority} Priority
-            </span>
+      <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm z-10 shrink-0 gap-4 md:gap-0">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => window.location.href = '/customer'}
+            className="md:hidden bg-gray-100 hover:bg-gray-200 p-2 rounded-lg text-gray-700 transition"
+          >
+            ← Back
+          </button>
+          <div>
+            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 flex flex-wrap items-center gap-2">
+              {ticket.title} 
+              <span className="text-gray-400 font-medium text-base md:text-lg">#{ticket.id.slice(0,8)}</span>
+            </h2>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span className={`text-xs md:text-sm px-2.5 md:px-3.5 py-1 rounded-full font-black border uppercase tracking-wider ${getStatusColor(ticket.status)}`}>
+                {ticket.status.replace('_', ' ')}
+              </span>
+              <span className="text-xs md:text-sm uppercase font-black text-gray-500 bg-gray-100 border border-gray-200 px-2.5 md:px-3.5 py-1 rounded-full tracking-wider">
+                {ticket.priority} Priority
+              </span>
+            </div>
           </div>
         </div>
       </div>

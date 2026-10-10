@@ -88,10 +88,10 @@ export default function AgentTicketView() {
   };
 
   return (
-    <div className="flex w-full h-full bg-gray-50">
+    <div className="flex flex-col md:flex-row w-full h-full bg-gray-50">
       {/* Left Panel: Ticket Details */}
-      <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 overflow-y-auto">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+      <div className="w-full md:w-1/3 h-[40%] md:h-full bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col shrink-0 overflow-y-auto">
+        <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50 shrink-0">
           <Link to="/agent" className="p-2 bg-white border border-gray-200 hover:bg-gray-100 rounded-lg transition text-gray-600 shadow-sm">
             <ArrowLeft size={18} />
           </Link>

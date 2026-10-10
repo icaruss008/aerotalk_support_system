@@ -103,12 +103,12 @@ export default function AgentDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-200 p-1 rounded-lg w-max mb-6">
+        <div className="flex flex-wrap gap-1 bg-gray-200 p-1 rounded-lg w-full md:w-max mb-6">
           {['ALL', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].map(status => (
             <button 
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition ${filter === status ? 'bg-white text-gray-900 shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-300'}`}
+              className={`px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-md transition flex-1 md:flex-none whitespace-nowrap ${filter === status ? 'bg-white text-gray-900 shadow' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-300'}`}
             >
               {status.replace('_', ' ')}
             </button>

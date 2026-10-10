@@ -54,15 +54,23 @@ export default function NewChat() {
 
   return (
     <div className="flex flex-col h-full relative bg-gray-50/30">
-      <div className="bg-white border-b border-gray-200 px-8 py-6 flex justify-between items-center shadow-sm z-10">
-        <div>
-          <h2 className="text-2xl font-extrabold text-gray-900">How can we help you?</h2>
-          <p className="text-base text-gray-500 mt-1">Briefly describe your issue below, then generate a ticket to connect with our team.</p>
+      <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm z-10 gap-4 md:gap-0 shrink-0">
+        <div className="flex items-start md:items-center gap-3">
+          <button 
+            onClick={() => window.location.href = '/customer'}
+            className="md:hidden bg-gray-100 hover:bg-gray-200 p-2 rounded-lg text-gray-700 transition shrink-0 mt-1 md:mt-0"
+          >
+            ← Back
+          </button>
+          <div>
+            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">How can we help you?</h2>
+            <p className="text-sm md:text-base text-gray-500 mt-1">Briefly describe your issue below, then generate a ticket to connect with our team.</p>
+          </div>
         </div>
         <button 
           onClick={handleOpenModal} 
           disabled={messages.length === 0} 
-          className="bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3.5 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-blue-700 transition-all transform active:scale-95"
+          className="w-full md:w-auto bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 md:px-6 py-3 md:py-3.5 rounded-xl font-bold text-base md:text-lg shadow-md hover:shadow-lg hover:bg-blue-700 transition-all transform active:scale-95"
         >
           Create Support Ticket
         </button>

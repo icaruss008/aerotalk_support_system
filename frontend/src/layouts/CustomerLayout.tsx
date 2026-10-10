@@ -1,4 +1,4 @@
-import { Outlet, Link, Navigate, useParams } from 'react-router-dom';
+import { Outlet, Link, Navigate, useParams, useLocation } from 'react-router-dom';
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -9,6 +9,10 @@ export default function CustomerLayout() {
   const { customer } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const { id } = useParams();
+  const location = useLocation();
+
+  const isNewChat = location.pathname.endsWith('/new');
+  const isMobileChatOpen = id || isNewChat;
 
   const fetchTickets = useCallback(() => {
     if (customer) {
@@ -37,9 +41,9 @@ export default function CustomerLayout() {
   return (
     <div className="flex w-full h-full relative">
       {/* Sidebar */}
-      <div className={`w-full md:w-96 bg-white border-r border-gray-300 flex-col h-full shrink-0 shadow-sm z-10 ${id ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`w-full md:w-96 bg-white border-r border-gray-300 flex-col h-full shrink-0 shadow-sm z-10 ${isMobileChatOpen ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-6 border-b border-gray-200 bg-gray-50">
-          <Link to="/customer" className="flex items-center gap-2 w-full justify-center bg-blue-600 text-white py-3.5 px-4 rounded-xl hover:bg-blue-700 transition font-bold text-lg shadow-md hover:shadow-lg">
+          <Link to="/customer/new" className="flex items-center gap-2 w-full justify-center bg-blue-600 text-white py-3.5 px-4 rounded-xl hover:bg-blue-700 transition font-bold text-lg shadow-md hover:shadow-lg">
             <MessageSquarePlus size={24} />
             Start New Support Chat
           </Link>
@@ -71,7 +75,7 @@ export default function CustomerLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 bg-white h-full flex-col overflow-hidden relative ${id ? 'flex' : 'hidden md:flex'}`}>
+      <div className={`flex-1 bg-white h-full flex-col overflow-hidden relative ${isMobileChatOpen ? 'flex' : 'hidden md:flex'}`}>
         <Outlet context={{ refreshTickets: fetchTickets }} />
       </div>
     </div>

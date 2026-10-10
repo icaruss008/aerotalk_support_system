@@ -18,6 +18,7 @@ function App() {
             
             <Route path="customer" element={<CustomerLayout />}>
               <Route index element={<NewChat />} />
+              <Route path="new" element={<NewChat />} />
               <Route path="tickets/:id" element={<LiveChat />} />
             </Route>
 

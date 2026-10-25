@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import api from '../../services/api';
-import { Send } from 'lucide-react';
+import { Send, ArrowLeft, MessageSquare, Sparkles, X } from 'lucide-react';
 
 export default function NewChat() {
   const { customer } = useAuth();
@@ -12,6 +12,7 @@ export default function NewChat() {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
   const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   
   const navigate = useNavigate();
   const { refreshTickets } = useOutletContext<any>();
@@ -29,17 +30,23 @@ export default function NewChat() {
   }, [messages]);
 
   const handleOpenModal = () => {
+    if (!title && messages.length > 0) {
+      setTitle(messages[0].slice(0, 50));
+    }
     setDescription(messages.join('\n\n'));
     setShowModal(true);
   };
 
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim()) return;
+    
+    setSubmitting(true);
     try {
       const res = await api.post('/tickets', {
         customerId: customer?.id,
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim() || title.trim(),
         priority,
         initialMessages: messages
       });
@@ -49,49 +56,74 @@ export default function NewChat() {
       }
     } catch (err) {
       alert('Failed to create ticket. Please check your connection.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-full relative bg-gray-50/30">
-      <div className="bg-white border-b border-gray-200 px-4 md:px-8 py-4 md:py-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm z-10 gap-4 md:gap-0 shrink-0">
-        <div className="flex items-start md:items-center gap-3">
+    <div className="flex flex-col h-full relative bg-zinc-50/30">
+      {/* Header Bar */}
+      <div className="bg-white border-b border-zinc-200/80 px-4 sm:px-6 py-3.5 flex justify-between items-center shadow-xs z-10 shrink-0">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => window.location.href = '/customer'}
-            className="md:hidden bg-gray-100 hover:bg-gray-200 p-2 rounded-lg text-gray-700 transition shrink-0 mt-1 md:mt-0"
+            className="md:hidden p-1.5 rounded-lg text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 transition"
+            title="Back to Tickets"
           >
-            ← Back
+            <ArrowLeft size={18} />
           </button>
           <div>
-            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">How can we help you?</h2>
-            <p className="text-sm md:text-base text-gray-500 mt-1">Briefly describe your issue below, then generate a ticket to connect with our team.</p>
+            <h2 className="text-sm sm:text-base font-semibold text-zinc-900 tracking-tight flex items-center gap-2">
+              <span>New Support Conversation</span>
+            </h2>
+            <p className="text-xs text-zinc-400 hidden sm:block">
+              Describe your question or issue below, then route it to our engineering team.
+            </p>
           </div>
         </div>
+
         <button 
           onClick={handleOpenModal} 
           disabled={messages.length === 0} 
-          className="w-full md:w-auto bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 md:px-6 py-3 md:py-3.5 rounded-xl font-bold text-base md:text-lg shadow-md hover:shadow-lg hover:bg-blue-700 transition-all transform active:scale-95"
+          className="bg-indigo-600 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed hover:bg-indigo-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
         >
-          Create Support Ticket
+          <Sparkles size={14} />
+          <span>Create Ticket ({messages.length})</span>
         </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+      {/* Messages Stream */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
         {messages.length === 0 && (
-          <div className="flex justify-center mt-12 mb-8">
-            <div className="bg-blue-50 border-2 border-blue-200 text-blue-900 rounded-2xl p-8 max-w-2xl text-center shadow-sm">
-              <h3 className="text-2xl font-black mb-3">👋 Welcome to AeroTalk Support</h3>
-              <p className="text-lg font-medium opacity-80 leading-relaxed">
-                Please type out your issue in the box below. You can send multiple messages.<br/><br/>
-                When you are ready, click the <strong>"Create Support Ticket"</strong> button at the top right to instantly route your issue to an available agent.
-              </p>
+          <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto text-center py-12 px-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-3 shadow-xs">
+              <MessageSquare size={20} />
+            </div>
+            <h3 className="text-sm font-semibold text-zinc-900">How can we help you today?</h3>
+            <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
+              Type out your issue or inquiry in the message composer below. Once you've added your details, click <strong className="text-zinc-800 font-medium">Create Ticket</strong> to connect with an agent.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2 justify-center">
+              <button 
+                onClick={() => setInput("I am having trouble with API authentication...")}
+                className="text-[11px] bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-600 px-3 py-1.5 rounded-full transition shadow-2xs hover:bg-zinc-50 cursor-pointer"
+              >
+                API authentication issue
+              </button>
+              <button 
+                onClick={() => setInput("My billing cycle and invoice question...")}
+                className="text-[11px] bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-600 px-3 py-1.5 rounded-full transition shadow-2xs hover:bg-zinc-50 cursor-pointer"
+              >
+                Billing & invoices
+              </button>
             </div>
           </div>
         )}
         
         {messages.map((m, i) => (
           <div key={i} className="flex justify-end">
-            <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-6 py-4 text-lg max-w-[80%] shadow-md whitespace-pre-wrap leading-relaxed">
+            <div className="bg-indigo-600 text-white text-sm rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[85%] sm:max-w-[70%] shadow-xs whitespace-pre-wrap leading-relaxed">
               {m}
             </div>
           </div>
@@ -99,75 +131,108 @@ export default function NewChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="bg-white border-t border-gray-200 p-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <form onSubmit={handleSend} className="flex gap-4 max-w-5xl mx-auto">
+      {/* Composer Input */}
+      <div className="bg-white border-t border-zinc-200/80 p-3 sm:p-4 shrink-0">
+        <form onSubmit={handleSend} className="flex items-center gap-2 max-w-4xl mx-auto">
           <input 
             type="text" 
             value={input} 
             onChange={e=>setInput(e.target.value)} 
-            placeholder="Type your issue here..." 
-            className="flex-1 border-2 border-gray-300 rounded-full px-6 py-4 text-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-inner" 
+            placeholder="Type your message and press Enter..." 
+            className="flex-1 bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition" 
           />
           <button 
             type="submit" 
             disabled={!input.trim()} 
-            className="bg-blue-600 disabled:bg-gray-300 text-white rounded-full w-16 h-16 flex items-center justify-center transition-all shadow-md hover:shadow-lg hover:bg-blue-700"
+            className="bg-indigo-600 disabled:bg-zinc-200 disabled:text-zinc-400 text-white rounded-xl w-10 h-10 flex items-center justify-center transition shadow-xs hover:bg-indigo-700 cursor-pointer shrink-0"
           >
-            <Send size={28} className="ml-1" />
+            <Send size={16} />
           </button>
         </form>
       </div>
 
+      {/* Sleek Ticket Generation Modal */}
       {showModal && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 transform transition-all animate-in fade-in zoom-in duration-200">
-            <h3 className="text-3xl font-extrabold mb-6 text-gray-900 border-b pb-4">Create Support Ticket</h3>
-            <form onSubmit={handleCreateTicket} className="space-y-6">
+        <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg border border-zinc-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
               <div>
-                <label className="block text-lg font-bold text-gray-700 mb-2">Issue Title (Required)</label>
+                <h3 className="text-base font-semibold text-zinc-900">Create Support Ticket</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">Route your conversation to our active agent queue</p>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg hover:bg-zinc-100 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-700 mb-1.5 uppercase tracking-wider">
+                  Ticket Subject / Title <span className="text-rose-500">*</span>
+                </label>
                 <input 
                   required 
                   type="text" 
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+                  className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl px-3.5 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition" 
                   value={title} 
                   onChange={e=>setTitle(e.target.value)} 
-                  placeholder="E.g., Cannot login to account" 
+                  placeholder="Brief summary of your inquiry..." 
                 />
               </div>
+
               <div>
-                <label className="block text-lg font-bold text-gray-700 mb-2">Priority Level</label>
-                <select 
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-all cursor-pointer" 
-                  value={priority} 
-                  onChange={e=>setPriority(e.target.value)}
-                >
-                  <option value="LOW">🟢 Low (Not urgent)</option>
-                  <option value="MEDIUM">🟡 Medium (Standard)</option>
-                  <option value="HIGH">🔴 High (Critical issue)</option>
-                </select>
+                <label className="block text-xs font-semibold text-zinc-700 mb-1.5 uppercase tracking-wider">Priority Level</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'LOW', label: 'Low', desc: 'General question', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                    { id: 'MEDIUM', label: 'Medium', desc: 'Normal issue', color: 'text-amber-700 bg-amber-50 border-amber-200' },
+                    { id: 'HIGH', label: 'High', desc: 'Critical blocker', color: 'text-rose-700 bg-rose-50 border-rose-200' },
+                  ].map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setPriority(p.id)}
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                        priority === p.id 
+                          ? `${p.color} ring-2 ring-indigo-500/20 font-semibold shadow-xs` 
+                          : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+                      }`}
+                    >
+                      <div className="text-xs font-semibold">{p.label}</div>
+                      <div className="text-[10px] text-zinc-400">{p.desc}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
+
               <div>
-                <label className="block text-lg font-bold text-gray-700 mb-2">Issue Description</label>
+                <label className="block text-xs font-semibold text-zinc-700 mb-1.5 uppercase tracking-wider">Compiled Description</label>
                 <textarea 
-                  required 
-                  className="w-full border-2 border-gray-300 rounded-xl px-4 py-4 h-32 text-lg text-gray-700 bg-gray-50 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" 
+                  rows={3}
+                  className="w-full bg-zinc-50/50 border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 placeholder-zinc-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition" 
                   value={description} 
                   onChange={e=>setDescription(e.target.value)} 
+                  placeholder="Ticket details..."
                 />
               </div>
-              <div className="flex justify-end gap-4 border-t pt-6">
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-zinc-100">
                 <button 
                   type="button" 
                   onClick={()=>setShowModal(false)} 
-                  className="px-6 py-4 text-gray-600 font-bold text-lg rounded-xl hover:bg-gray-100 transition-all"
+                  className="px-4 py-2 text-xs font-medium text-zinc-600 hover:text-zinc-900 rounded-lg hover:bg-zinc-100 transition"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg hover:bg-blue-700 transition-all active:scale-95"
+                  disabled={submitting || !title.trim()}
+                  className="bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 text-white text-xs font-medium px-4 py-2 rounded-lg transition shadow-xs cursor-pointer"
                 >
-                  Submit Ticket
+                  {submitting ? 'Submitting...' : 'Confirm & Launch Ticket'}
                 </button>
               </div>
             </form>

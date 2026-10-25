@@ -3,13 +3,23 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { socket } from '../../services/socket';
 import type { Ticket, Message } from '../../types';
-import { Send, UserCircle, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { 
+  Send, 
+  ArrowLeft, 
+  CheckCircle2, 
+  Lock, 
+  User, 
+  Mail, 
+  Tag, 
+  FileText
+} from 'lucide-react';
 
 export default function AgentTicketView() {
   const { id } = useParams();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,7 +31,10 @@ export default function AgentTicketView() {
       socket.emit('join_ticket', id);
 
       const handleNewMessage = (msg: Message) => {
-        setMessages(prev => [...prev, msg]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
       };
       
       const handleStatusUpdated = (updatedTicket: Ticket) => {
@@ -45,195 +58,266 @@ export default function AgentTicketView() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !id) return;
+    if (!input.trim() || !id || sending) return;
     
-    api.post(`/tickets/${id}/messages`, { senderType: 'AGENT', message: input.trim() })
-      .then(() => setInput(''))
-      .catch(console.error);
+    const messageContent = input.trim();
+    setInput('');
+    setSending(true);
+
+    try {
+      await api.post(`/tickets/${id}/messages`, { senderType: 'AGENT', message: messageContent });
+    } catch (err) {
+      console.error('Failed to send message', err);
+      setInput(messageContent);
+    } finally {
+      setSending(false);
+    }
   };
 
   const updateStatus = async (status: string) => {
     try {
-      await api.patch(`/tickets/${id}/status`, { status });
+      const res = await api.patch(`/tickets/${id}/status`, { status });
+      if (res.data.success) {
+        setTicket(res.data.data);
+      }
     } catch (err) {
       console.error('Failed to update status', err);
     }
   };
 
   if (!ticket) return (
-    <div className="flex h-full w-full items-center justify-center text-gray-500">
-      Loading ticket details...
+    <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
+      Loading ticket workspace...
     </div>
   );
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadge = (priority: string) => {
     switch(priority) {
-      case 'HIGH': return 'bg-red-100 text-red-800 border-red-200';
-      case 'MEDIUM': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'LOW': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'HIGH': 
+        return 'bg-rose-50 text-rose-700 border-rose-200/80';
+      case 'MEDIUM': 
+        return 'bg-amber-50 text-amber-700 border-amber-200/80';
+      case 'LOW': 
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+      default: 
+        return 'bg-zinc-50 text-zinc-600 border-zinc-200';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch(status) {
-      case 'OPEN': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'IN_PROGRESS': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'RESOLVED': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      case 'CLOSED': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'OPEN': 
+        return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700 border-amber-200/60', label: 'Open' };
+      case 'IN_PROGRESS': 
+        return { dot: 'bg-indigo-500', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200/60', label: 'In Progress' };
+      case 'RESOLVED': 
+        return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200/60', label: 'Resolved' };
+      case 'CLOSED': 
+        return { dot: 'bg-zinc-400', badge: 'bg-zinc-100 text-zinc-600 border-zinc-200', label: 'Closed' };
+      default: 
+        return { dot: 'bg-zinc-400', badge: 'bg-zinc-100 text-zinc-600 border-zinc-200', label: status };
     }
   };
+
+  const statusConfig = getStatusBadge(ticket.status);
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-full bg-gray-50">
-      {/* Left Panel: Ticket Details */}
-      <div className="w-full md:w-1/3 h-[40%] md:h-full bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col shrink-0 overflow-y-auto">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50 shrink-0">
-          <Link to="/agent" className="p-2 bg-white border border-gray-200 hover:bg-gray-100 rounded-lg transition text-gray-600 shadow-sm">
-            <ArrowLeft size={18} />
+    <div className="flex flex-col md:flex-row w-full h-full bg-zinc-50/40">
+      
+      {/* Left Panel: Customer Dossier & Ticket Controls */}
+      <div className="w-full md:w-80 lg:w-96 h-[42%] md:h-full bg-white border-b md:border-b-0 md:border-r border-zinc-200/80 flex flex-col shrink-0 overflow-y-auto">
+        {/* Navigation Bar */}
+        <div className="p-3.5 border-b border-zinc-100 flex items-center gap-2.5 bg-zinc-50/50 shrink-0">
+          <Link 
+            to="/agent" 
+            className="p-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-lg transition text-zinc-600 shadow-2xs"
+            title="Return to Queue"
+          >
+            <ArrowLeft size={16} />
           </Link>
-          <h2 className="text-lg font-bold text-gray-800">Back to Dashboard</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-zinc-800">Ticket Workspace</span>
+            <span className="font-mono text-[10px] text-zinc-400 bg-white border border-zinc-200 px-1.5 py-0.5 rounded">
+              #{ticket.id.slice(0, 8)}
+            </span>
+          </div>
         </div>
         
-        <div className="p-6 space-y-6">
+        {/* Dossier Body */}
+        <div className="p-4 sm:p-5 space-y-5">
+          {/* Title & Metadata */}
           <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Ticket Details</div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2 leading-tight">{ticket.title}</h1>
-            <div className="flex gap-2 flex-wrap mb-4">
-              <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold border ${getStatusColor(ticket.status)}`}>
-                {ticket.status.replace('_', ' ')}
+            <h1 className="text-base font-bold text-zinc-900 tracking-tight leading-snug mb-2">{ticket.title}</h1>
+            <div className="flex gap-2 items-center flex-wrap">
+              <span className={`inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusConfig.badge}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`}></span>
+                {statusConfig.label}
               </span>
-              <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold border uppercase ${getPriorityColor(ticket.priority)}`}>
-                {ticket.priority} Priority
+              <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full border ${getPriorityBadge(ticket.priority)}`}>
+                {ticket.priority}
               </span>
             </div>
-            <p className="text-[11px] text-gray-500 font-mono bg-gray-50 p-2 rounded border border-gray-100">ID: {ticket.id}</p>
           </div>
 
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Customer</div>
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-              <UserCircle size={36} className="text-gray-400" />
-              <div>
-                <div className="font-semibold text-gray-900">{ticket.customer?.name || 'Unknown'}</div>
-                <div className="text-sm text-gray-500">{ticket.customer?.email || 'No email provided'}</div>
+          {/* Customer Profile Card */}
+          <div className="bg-zinc-50/60 rounded-xl p-3.5 border border-zinc-200/70">
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <User size={13} />
+              <span>Customer Information</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                {ticket.customer?.name ? ticket.customer.name.charAt(0).toUpperCase() : '?'}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-zinc-900 truncate">{ticket.customer?.name || 'Anonymous User'}</div>
+                <div className="text-[11px] text-zinc-500 truncate flex items-center gap-1">
+                  <Mail size={11} className="shrink-0 text-zinc-400" />
+                  <span className="truncate">{ticket.customer?.email || 'N/A'}</span>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Issue Description */}
           <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</div>
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-gray-800 text-sm whitespace-pre-wrap leading-relaxed shadow-inner max-h-60 overflow-y-auto">
-              {ticket.description}
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <FileText size={13} />
+              <span>Initial Description</span>
+            </div>
+            <div className="bg-zinc-50/50 p-3 rounded-xl border border-zinc-200/70 text-zinc-700 text-xs whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+              {ticket.description || 'No description provided.'}
             </div>
           </div>
 
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Timestamps</div>
-            <div className="text-[11px] text-gray-600 grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
-              <div><span className="font-semibold text-gray-700">Created:</span><br/>{new Date(ticket.createdAt).toLocaleString()}</div>
-              <div><span className="font-semibold text-gray-700">Updated:</span><br/>{new Date(ticket.updatedAt).toLocaleString()}</div>
+          {/* Lifecycle Timestamps */}
+          <div className="text-[11px] text-zinc-500 grid grid-cols-2 gap-2 bg-zinc-50/50 p-3 rounded-xl border border-zinc-200/70">
+            <div>
+              <span className="text-zinc-400 block text-[10px] uppercase font-semibold">Created</span>
+              <span className="text-zinc-700 font-medium">{new Date(ticket.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <div>
+              <span className="text-zinc-400 block text-[10px] uppercase font-semibold">Updated</span>
+              <span className="text-zinc-700 font-medium">{new Date(ticket.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-200">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Status Controls</div>
-            <div className="grid grid-cols-1 gap-2 mb-3">
-              <select 
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition"
-                value={ticket.status}
-                onChange={(e) => updateStatus(e.target.value)}
-              >
-                <option value="OPEN">OPEN</option>
-                <option value="IN_PROGRESS">IN PROGRESS</option>
-                <option value="RESOLVED">RESOLVED</option>
-                <option value="CLOSED">CLOSED</option>
-              </select>
+          {/* Lifecycle & Status Transition Controls */}
+          <div className="pt-4 border-t border-zinc-100 space-y-3">
+            <div className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Tag size={13} />
+              <span>Update Lifecycle Status</span>
             </div>
-            <div className="flex gap-2">
+            
+            <select 
+              className="w-full bg-white border border-zinc-200 rounded-xl px-3 py-2 text-xs font-medium text-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 shadow-2xs transition cursor-pointer"
+              value={ticket.status}
+              onChange={(e) => updateStatus(e.target.value)}
+            >
+              <option value="OPEN">Mark as OPEN</option>
+              <option value="IN_PROGRESS">Mark as IN PROGRESS</option>
+              <option value="RESOLVED">Mark as RESOLVED</option>
+              <option value="CLOSED">Mark as CLOSED</option>
+            </select>
+
+            <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={() => updateStatus('RESOLVED')}
                 disabled={ticket.status === 'RESOLVED'}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-100 hover:bg-emerald-200 disabled:opacity-40 text-emerald-800 font-bold py-2.5 rounded-lg border border-emerald-200 transition text-[13px] shadow-sm"
+                className="flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 text-emerald-800 font-semibold py-2 rounded-xl border border-emerald-200 transition text-xs shadow-2xs cursor-pointer"
               >
-                <CheckCircle size={16} /> Mark Resolved
+                <CheckCircle2 size={14} />
+                <span>Resolve</span>
               </button>
               <button 
                 onClick={() => updateStatus('CLOSED')}
                 disabled={ticket.status === 'CLOSED'}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-gray-200 hover:bg-gray-300 disabled:opacity-40 text-gray-800 font-bold py-2.5 rounded-lg border border-gray-300 transition text-[13px] shadow-sm"
+                className="flex items-center justify-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-40 text-zinc-700 font-semibold py-2 rounded-xl border border-zinc-200 transition text-xs shadow-2xs cursor-pointer"
               >
-                <XCircle size={16} /> Close Ticket
+                <Lock size={14} />
+                <span>Close</span>
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* Right Panel: Chat Interface */}
-      <div className="flex-1 flex flex-col h-full bg-gray-50 relative">
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-sm shrink-0">
-          <h2 className="text-lg font-bold text-gray-900">Live Agent Chat</h2>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-green-700 bg-green-100 px-3 py-1.5 rounded-full border border-green-200 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            Connected
+      {/* Right Panel: Real-time Communication Channel */}
+      <div className="flex-1 flex flex-col h-full bg-white relative">
+        {/* Stream Header */}
+        <div className="bg-white border-b border-zinc-200/80 px-4 sm:px-6 py-3 flex justify-between items-center shadow-xs shrink-0 z-10">
+          <div>
+            <span className="text-xs font-semibold text-zinc-900">Communication Stream</span>
+            <span className="text-[11px] text-zinc-400 ml-2">Live with {ticket.customer?.name || 'Customer'}</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Socket Live
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Chat Feed */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-zinc-50/20">
           {messages.map((m) => {
             const isAgent = m.senderType === 'AGENT';
             return (
               <div key={m.id} className={`flex flex-col ${isAgent ? 'items-end' : 'items-start'}`}>
-                <div className={`flex items-end gap-3 max-w-[85%] ${isAgent ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex items-end gap-2.5 max-w-[85%] sm:max-w-[75%] ${isAgent ? 'flex-row-reverse' : 'flex-row'}`}>
                   
                   {!isAgent && (
-                    <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 shadow-sm font-bold border border-blue-200">
+                    <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center text-[11px] font-bold shrink-0">
                       {ticket.customer?.name ? ticket.customer.name.charAt(0).toUpperCase() : 'C'}
                     </div>
                   )}
                   
-                  <div className={`px-5 py-3 shadow-sm ${
-                    isAgent 
-                      ? 'bg-slate-700 text-white rounded-2xl rounded-tr-sm' 
-                      : 'bg-white border border-gray-200 text-gray-800 rounded-2xl rounded-tl-sm'
-                  }`}>
-                    {!isAgent && <div className="text-[10px] font-bold text-blue-600 mb-1 tracking-wide uppercase">{ticket.customer?.name || 'Customer'}</div>}
-                    <p className="whitespace-pre-wrap leading-relaxed text-sm">{m.message}</p>
+                  <div>
+                    <span className={`text-[10px] font-semibold text-zinc-400 uppercase tracking-wider block mb-1 ${isAgent ? 'text-right pr-1' : 'pl-1'}`}>
+                      {isAgent ? 'You (Agent)' : (ticket.customer?.name || 'Customer')}
+                    </span>
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      isAgent 
+                        ? 'bg-zinc-900 text-white rounded-tr-xs shadow-xs' 
+                        : 'bg-white border border-zinc-200/90 text-zinc-800 rounded-tl-xs shadow-xs'
+                    }`}>
+                      <p className="whitespace-pre-wrap">{m.message}</p>
+                    </div>
+                    <span className={`text-[10px] font-medium text-zinc-400 mt-1 block ${isAgent ? 'text-right pr-1' : 'pl-1'}`}>
+                      {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                 </div>
-                
-                <span className={`text-[11px] font-medium text-gray-400 mt-1 ${isAgent ? 'mr-2' : 'ml-12'}`}>
-                  {new Date(m.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                </span>
               </div>
             );
           })}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="bg-white border-t border-gray-200 p-4 shrink-0">
-          <form onSubmit={handleSend} className="flex gap-3">
+        {/* Agent Reply Composer */}
+        <div className="bg-white border-t border-zinc-200/80 p-3 sm:p-4 shrink-0">
+          <form onSubmit={handleSend} className="flex items-center gap-2 max-w-4xl mx-auto">
             <input 
               type="text" 
               value={input} 
               onChange={e=>setInput(e.target.value)} 
-              placeholder="Type your response to the customer..." 
-              className="flex-1 border border-gray-300 rounded-full px-5 py-3 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 outline-none transition shadow-sm text-sm" 
+              placeholder="Send response to customer..." 
+              className="flex-1 bg-zinc-50 border border-zinc-200/80 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition" 
             />
             <button 
               type="submit" 
-              disabled={!input.trim()} 
-              className="bg-slate-700 disabled:bg-gray-300 text-white rounded-full w-12 h-12 flex items-center justify-center transition shadow-sm"
+              disabled={!input.trim() || sending} 
+              className="bg-zinc-900 disabled:bg-zinc-200 disabled:text-zinc-400 text-white rounded-xl px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5 transition shadow-xs hover:bg-zinc-800 cursor-pointer shrink-0 active:scale-95"
             >
-              <Send size={18} className="ml-1" />
+              <Send size={14} />
+              <span>Reply</span>
             </button>
           </form>
         </div>
+
       </div>
+
     </div>
   );
 }

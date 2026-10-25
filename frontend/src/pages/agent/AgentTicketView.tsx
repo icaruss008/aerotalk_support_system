@@ -20,6 +20,7 @@ export default function AgentTicketView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'chat' | 'dossier'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -124,10 +125,34 @@ export default function AgentTicketView() {
   const statusConfig = getStatusBadge(ticket.status);
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-full bg-zinc-50/40">
+    <div className="flex flex-col md:flex-row w-full h-full bg-zinc-50/40 overflow-hidden">
       
+      {/* Mobile Tab Switcher */}
+      <div className="md:hidden flex items-center justify-between px-3 py-2 bg-zinc-100 border-b border-zinc-200 shrink-0">
+        <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-zinc-200/80 shadow-2xs w-full">
+          <button 
+            onClick={() => setMobileTab('chat')}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center cursor-pointer ${
+              mobileTab === 'chat' ? 'bg-zinc-900 text-white shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+            }`}
+          >
+            Live Conversation
+          </button>
+          <button 
+            onClick={() => setMobileTab('dossier')}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition text-center cursor-pointer ${
+              mobileTab === 'dossier' ? 'bg-zinc-900 text-white shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
+            }`}
+          >
+            Ticket Dossier & Status
+          </button>
+        </div>
+      </div>
+
       {/* Left Panel: Customer Dossier & Ticket Controls */}
-      <div className="w-full md:w-80 lg:w-96 h-[42%] md:h-full bg-white border-b md:border-b-0 md:border-r border-zinc-200/80 flex flex-col shrink-0 overflow-y-auto">
+      <div className={`w-full md:w-80 lg:w-96 h-full bg-white border-b md:border-b-0 md:border-r border-zinc-200/80 flex-col shrink-0 overflow-y-auto ${
+        mobileTab === 'dossier' ? 'flex' : 'hidden md:flex'
+      }`}>
         {/* Navigation Bar */}
         <div className="p-3.5 border-b border-zinc-100 flex items-center gap-2.5 bg-zinc-50/50 shrink-0">
           <Link 
@@ -246,7 +271,7 @@ export default function AgentTicketView() {
       </div>
 
       {/* Right Panel: Real-time Communication Channel */}
-      <div className="flex-1 flex flex-col h-full bg-white relative">
+      <div className={`flex-1 flex-col h-full bg-white relative ${mobileTab === 'chat' ? 'flex' : 'hidden md:flex'}`}>
         {/* Stream Header */}
         <div className="bg-white border-b border-zinc-200/80 px-4 sm:px-6 py-3 flex justify-between items-center shadow-xs shrink-0 z-10">
           <div>

@@ -67,7 +67,7 @@ export default function NewChat() {
       <div className="bg-white border-b border-zinc-200/80 px-4 sm:px-6 py-3.5 flex justify-between items-center shadow-xs z-10 shrink-0">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => window.location.href = '/customer'}
+            onClick={() => navigate('/customer')}
             className="md:hidden p-1.5 rounded-lg text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 transition"
             title="Back to Tickets"
           >

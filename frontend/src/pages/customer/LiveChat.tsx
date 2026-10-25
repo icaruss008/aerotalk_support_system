@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useOutletContext } from 'react-router-dom';
+import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { socket } from '../../services/socket';
 import type { Ticket, Message } from '../../types';
@@ -13,6 +13,7 @@ export default function LiveChat() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { refreshTickets } = useOutletContext<any>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     socket.connect();
@@ -98,7 +99,7 @@ export default function LiveChat() {
       <div className="bg-white border-b border-zinc-200/80 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-xs z-10 shrink-0">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => window.location.href = '/customer'}
+            onClick={() => navigate('/customer')}
             className="md:hidden p-1.5 rounded-lg text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 transition"
             title="Back to Tickets"
           >
